@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="PixelPlayer.WinUI.Pages.EqualizerPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="Transparent">
+    <ScrollViewer HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Spacing="16" Padding="28,20,28,40">
+
+            <TextBlock Text="均衡器" Style="{StaticResource PageTitle}" />
+
+            <!-- 开关 + 预设 -->
+            <Border Style="{StaticResource DemoCard}">
+                <StackPanel Spacing="12">
+                    <StackPanel Orientation="Horizontal" Spacing="16">
+                        <ToggleSwitch x:Name="EqSwitch" OnContent="启用" OffContent="停用" Toggled="EqSwitch_Toggled" />
+                        <ComboBox x:Name="PresetBox" Width="150" SelectionChanged="Preset_SelectionChanged" VerticalAlignment="Center" />
+                        <Button Content="重置" Click="Reset_Click" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <!-- 10 段滑杆 -->
+                    <StackPanel Orientation="Horizontal" Spacing="18" x:Name="BandPanel">
+                        <ItemsControl x:Name="BandsList">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="16" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Width="52" Spacing="4">
+                                        <TextBlock Text="{Binding GainText}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                                        <Slider Minimum="-12" Maximum="12" Value="{Binding Gain, Mode=TwoWay}"
+                                                Orientation="Vertical" Height="170" HorizontalAlignment="Center"
+                                                ValueChanged="Band_ValueChanged" Tag="{Binding Index}" />
+                                        <TextBlock Text="{Binding Label}" Style="{StaticResource CaptionTextBlockStyle}" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- 增强效果 -->
+            <Border Style="{StaticResource DemoCard}">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="增强效果" Style="{StaticResource CardTitle}" />
+                    <ToggleSwitch Header="低音增强" x:Name="BassSwitch" Toggled="Bass_Toggled" Margin="0,4,0,0" />
+                    <ToggleSwitch Header="空间音效（虚拟环绕）" x:Name="VirtualSwitch" Toggled="Virtual_Toggled" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

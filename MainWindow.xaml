@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="PixelPlayer.WinUI.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    <Grid x:Name="RootGrid" Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 主导航：主页 / 搜索 / 媒体库（+ 统计 / 均衡器），对应参照项目 BottomNavItem -->
+        <NavigationView
+            x:Name="Nav"
+            Grid.Row="0"
+            PaneDisplayMode="Left"
+            OpenPaneLength="240"
+            IsBackButtonVisible="Collapsed"
+            IsSettingsVisible="False"
+            Background="Transparent"
+            SelectionChanged="Nav_SelectionChanged">
+
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="主页" Tag="home" IsSelected="True">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE80F;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="搜索" Tag="search">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE721;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="媒体库" Tag="library">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE8F1;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItemSeparator />
+                <NavigationViewItem Content="收听统计" Tag="stats">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE823;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="均衡器" Tag="equalizer">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE9E9;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+            <NavigationView.FooterMenuItems>
+                <NavigationViewItem Content="设置" Tag="settings">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE713;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.FooterMenuItems>
+
+            <Frame x:Name="ContentFrame" Background="Transparent" />
+        </NavigationView>
+
+        <!-- 底部迷你播放条（点击展开全屏播放抽屉） -->
+        <Border
+            x:Name="PlayerBar"
+            Grid.Row="1"
+            Padding="16,8"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="0,1,0,0">
+            <Grid ColumnSpacing="14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="210" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- 封面区域：点击展开播放抽屉 -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" Background="Transparent" PointerPressed="PlayerBar_PointerPressed">
+                    <Border Width="52" Height="52" CornerRadius="6" Background="{ThemeResource ControlFillColorSecondaryBrush}">
+                        <Grid>
+                            <FontIcon Glyph="&#xE8D6;" FontSize="18" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <Image x:Name="BarCover" Stretch="UniformToFill" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1" Background="Transparent" PointerPressed="PlayerBar_PointerPressed">
+                    <TextBlock x:Name="BarTitle" Text="未在播放" Style="{StaticResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock x:Name="BarArtist" Text="从曲库中选一首开始" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="2">
+                    <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                        <Button x:Name="BtnShuffle" Click="Shuffle_Click" ToolTipService.ToolTip="随机播放" Width="32" Height="32" CornerRadius="16" Background="Transparent" BorderThickness="0">
+                            <FontIcon x:Name="ShuffleIcon" Glyph="&#xE8B1;" FontSize="14" />
+                        </Button>
+                        <Button Click="Prev_Click" ToolTipService.ToolTip="上一首" Width="32" Height="32" CornerRadius="16" Background="Transparent" BorderThickness="0">
+                            <FontIcon Glyph="&#xE892;" FontSize="14" />
+                        </Button>
+                        <Button x:Name="BtnPlay" Click="PlayPause_Click" ToolTipService.ToolTip="播放/暂停" Style="{StaticResource AccentButtonStyle}" Width="36" Height="36" CornerRadius="18">
+                            <FontIcon x:Name="BarPlayIcon" Glyph="&#xE768;" FontSize="14" />
+                        </Button>
+                        <Button Click="Next_Click" ToolTipService.ToolTip="下一首" Width="32" Height="32" CornerRadius="16" Background="Transparent" BorderThickness="0">
+                            <FontIcon Glyph="&#xE893;" FontSize="14" />
+                        </Button>
+                        <Button x:Name="BtnRepeat" Click="Repeat_Click" ToolTipService.ToolTip="循环模式" Width="32" Height="32" CornerRadius="16" Background="Transparent" BorderThickness="0">
+                            <FontIcon x:Name="RepeatIcon" Glyph="&#xE8EE;" FontSize="14" />
+                        </Button>
+                    </StackPanel>
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="BarElapsed" Text="0:00" Style="{StaticResource CaptionTextBlockStyle}" VerticalAlignment="Center" />
+                        <Slider x:Name="BarSeek" Grid.Column="1" Minimum="0" Maximum="1" Value="0" VerticalAlignment="Center" />
+                        <TextBlock x:Name="BarTotal" Grid.Column="2" Text="0:00" Style="{StaticResource CaptionTextBlockStyle}" VerticalAlignment="Center" />
+                    </Grid>
+                </StackPanel>
+
+                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <FontIcon Glyph="&#xE767;" FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <Slider x:Name="VolumeSlider" Width="96" Minimum="0" Maximum="100" Value="80" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 全屏播放抽屉（对应参照项目 UnifiedPlayerSheet 的展开态） -->
+        <Border
+            x:Name="PlayerSheet"
+            Grid.RowSpan="2"
+            Background="{ThemeResource SolidBackgroundFillColorBaseBrush}"
+            Visibility="Collapsed"
+            Padding="36,14,36,20">
+            <Grid RowSpacing="10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- 顶部栏：收起 + 标题 + 歌词开关 -->
+                <Grid Grid.Row="0" ColumnSpacing="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Button Click="SheetClose_Click" ToolTipService.ToolTip="收起" Width="36" Height="36" CornerRadius="18" Background="Transparent" BorderThickness="0">
+                        <FontIcon Glyph="&#xE70D;" FontSize="14" />
+                    </Button>
+                    <TextBlock Grid.Column="1" Text="正在播放" Style="{StaticResource BodyStrongTextBlockStyle}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <Button x:Name="BtnLyricsToggle" Grid.Column="2" Content="歌词" Click="LyricsToggle_Click" />
+                </Grid>
+
+                <Grid Grid.Row="1" ColumnSpacing="24" MaxWidth="1500" HorizontalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="6*" />
+                        <ColumnDefinition Width="5*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- 左：封面 + 信息 + 进度 + 控制 -->
+                    <StackPanel Spacing="12" VerticalAlignment="Center">
+                        <Border
+                            Width="320" Height="320" HorizontalAlignment="Center"
+                            CornerRadius="12"
+                            Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1">
+                            <Grid>
+                                <FontIcon Glyph="&#xE8D6;" FontSize="48" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <Image x:Name="SheetCover" Stretch="UniformToFill" />
+                            </Grid>
+                        </Border>
+
+                        <StackPanel Spacing="2" HorizontalAlignment="Center">
+                            <TextBlock x:Name="SheetTitle" Text="未在播放" Style="{StaticResource TitleTextBlockStyle}" TextTrimming="CharacterEllipsis" HorizontalAlignment="Center" />
+                            <TextBlock x:Name="SheetArtist" Text="从曲库选一首开始" Style="{StaticResource BodyTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                            <TextBlock x:Name="SheetAlbum" Text="" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" />
+                        </StackPanel>
+
+                        <Slider x:Name="SheetSeek" Minimum="0" Maximum="1" Value="0" Width="520" HorizontalAlignment="Center" />
+                        <Grid Width="520" HorizontalAlignment="Center">
+                            <TextBlock x:Name="SheetElapsed" Text="0:00" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock x:Name="SheetTotal" Text="0:00" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Right" />
+                        </Grid>
+
+                        <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+                            <Button Click="Shuffle_Click" Width="42" Height="42" CornerRadius="21" Background="Transparent" BorderThickness="0" ToolTipService.ToolTip="随机">
+                                <FontIcon x:Name="SheetShuffleIcon" Glyph="&#xE8B1;" FontSize="16" />
+                            </Button>
+                            <Button Click="Prev_Click" Width="44" Height="44" CornerRadius="22" Background="Transparent" BorderThickness="0" ToolTipService.ToolTip="上一首">
+                                <FontIcon Glyph="&#xE892;" FontSize="18" />
+                            </Button>
+                            <Button Click="PlayPause_Click" Style="{StaticResource AccentButtonStyle}" Width="58" Height="58" CornerRadius="29" ToolTipService.ToolTip="播放/暂停">
+                                <FontIcon x:Name="SheetPlayIcon" Glyph="&#xE768;" FontSize="20" />
+                            </Button>
+                            <Button Click="Next_Click" Width="44" Height="44" CornerRadius="22" Background="Transparent" BorderThickness="0" ToolTipService.ToolTip="下一首">
+                                <FontIcon Glyph="&#xE893;" FontSize="18" />
+                            </Button>
+                            <Button Click="Repeat_Click" Width="42" Height="42" CornerRadius="21" Background="Transparent" BorderThickness="0" ToolTipService.ToolTip="循环">
+                                <FontIcon x:Name="SheetRepeatIcon" Glyph="&#xE8EE;" FontSize="16" />
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- 右：歌词面板 -->
+                    <Border Grid.Column="1" x:Name="LyricsCard" Style="{StaticResource DemoCard}">
+                        <Grid RowSpacing="8">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="歌词" Style="{StaticResource CardTitle}" />
+                                <TextBlock x:Name="LyricsHint" Text="" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <ListView x:Name="LyricsList" Grid.Row="1" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="Lyrics_ItemClick" />
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

@@ -1,0 +1,30 @@
+# Build outputs
+bin/
+obj/
+out/
+publish/
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+
+# Windows App SDK / MSIX
+*.appx
+*.msix
+*.appxbundle
+AppPackages/
+
+# Runtime artifacts
+crash.log
+*.log
+
+# Screenshots / test artifacts
+shot*.png
+*.ps1.bak
+
+# OS
+Thumbs.db
+desktop.ini

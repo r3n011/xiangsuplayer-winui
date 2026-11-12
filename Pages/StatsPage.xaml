@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="PixelPlayer.WinUI.Pages.StatsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="Transparent">
+    <ScrollViewer HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Spacing="16" Padding="28,20,28,40">
+
+            <TextBlock Text="收听统计" Style="{StaticResource PageTitle}" />
+
+            <!-- 概览 -->
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border Style="{StaticResource DemoCard}" Grid.Column="0">
+                    <StackPanel Spacing="2">
+                        <TextBlock x:Name="TotalPlays" Text="0" Style="{StaticResource TitleTextBlockStyle}" />
+                        <TextBlock Text="总播放次数" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource DemoCard}" Grid.Column="1">
+                    <StackPanel Spacing="2">
+                        <TextBlock x:Name="TotalHours" Text="0" Style="{StaticResource TitleTextBlockStyle}" />
+                        <TextBlock Text="累计收听（小时）" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource DemoCard}" Grid.Column="2">
+                    <StackPanel Spacing="2">
+                        <TextBlock x:Name="TodayCount" Text="0" Style="{StaticResource TitleTextBlockStyle}" />
+                        <TextBlock Text="今日播放" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource DemoCard}" Grid.Column="3">
+                    <StackPanel Spacing="2">
+                        <TextBlock x:Name="DistinctCount" Text="0" Style="{StaticResource TitleTextBlockStyle}" />
+                        <TextBlock Text="听过不同曲目" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- 最近 7 天 -->
+            <Border Style="{StaticResource DemoCard}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="最近 7 天" Style="{StaticResource CardTitle}" />
+                    <StackPanel Orientation="Horizontal" Spacing="10" x:Name="WeekBars" Height="140">
+                        <ItemsControl x:Name="WeekList">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="14" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Width="52" VerticalAlignment="Bottom">
+                                        <TextBlock Text="{Binding Count}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" Margin="0,0,0,4" />
+                                        <Border Height="{Binding BarHeight}" CornerRadius="4" Background="{ThemeResource AccentFillColorDefaultBrush}" MinHeight="4" VerticalAlignment="Bottom" />
+                                        <TextBlock Text="{Binding Day}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" Margin="0,6,0,0" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- 最常播放 -->
+                <Border Grid.Column="0" Style="{StaticResource DemoCard}">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="最常播放" Style="{StaticResource CardTitle}" />
+                        <ListView x:Name="TopTracksList" MaxHeight="300" SelectionMode="None" IsItemClickEnabled="True" ItemClick="TopTrack_ItemClick">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid ColumnSpacing="12" Padding="2,5">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Width="36" Height="36" CornerRadius="4" Background="{ThemeResource ControlFillColorSecondaryBrush}">
+                                            <Image Source="{Binding Track.CoverThumb}" Stretch="UniformToFill" />
+                                        </Border>
+                                        <TextBlock Grid.Column="1" Text="{Binding Count}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource AccentFillColorDefaultBrush}" VerticalAlignment="Center" MinWidth="28" />
+                                        <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="1">
+                                            <TextBlock Text="{Binding Track.Title}" Style="{StaticResource BodyTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding Track.Artist}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="3" Text="{Binding Track.DurationText}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                        <TextBlock x:Name="TopTracksEmpty" Text="暂无数据" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- 最常听艺术家 -->
+                <Border Grid.Column="1" Style="{StaticResource DemoCard}">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="最常听的艺术家" Style="{StaticResource CardTitle}" />
+                        <ItemsControl x:Name="TopArtistsList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid ColumnSpacing="12" Padding="0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Spacing="4">
+                                            <TextBlock Text="{Binding Artist}" Style="{StaticResource BodyTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                                            <ProgressBar Value="{Binding Percent}" Maximum="100" />
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="{Binding Count}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock x:Name="TopArtistsEmpty" Text="暂无数据" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+                <Button Content="清空统计与历史" Click="ClearStats_Click" />
+                <TextBlock x:Name="StatsNote" Text="" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" VerticalAlignment="Center" />
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

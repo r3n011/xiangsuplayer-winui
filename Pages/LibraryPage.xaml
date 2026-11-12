@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="PixelPlayer.WinUI.Pages.LibraryPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="Transparent">
+    <Grid Padding="28,20,28,24" RowSpacing="12" MaxWidth="1500">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="媒体库" Style="{StaticResource PageTitle}" />
+
+        <!-- 顶部：标签行 + 操作行 -->
+        <Grid Grid.Row="1" ColumnSpacing="12" Margin="0,4,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <SelectorBar x:Name="TabBar" SelectionChanged="Tab_SelectionChanged">
+                <SelectorBarItem Text="歌曲" IsSelected="True" Tag="songs" />
+                <SelectorBarItem Text="专辑" Tag="albums" />
+                <SelectorBarItem Text="艺术家" Tag="artists" />
+                <SelectorBarItem Text="歌单" Tag="playlists" />
+                <SelectorBarItem Text="文件夹" Tag="folders" />
+                <SelectorBarItem Text="历史" Tag="history" />
+            </SelectorBar>
+
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                <Button Content="播放全部" Style="{StaticResource AccentButtonStyle}" Click="PlayAll_Click" />
+                <Button Content="随机播放" Click="ShuffleAll_Click" />
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="2">
+            <!-- 歌曲面板 -->
+            <Grid x:Name="SongsPanel" RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <AutoSuggestBox x:Name="SearchBox" PlaceholderText="搜索曲名、艺术家、专辑、流派" QueryIcon="Find" TextChanged="Search_TextChanged" />
+                    <ComboBox x:Name="SortBox" Grid.Column="1" Width="120" SelectedIndex="0">
+                        <ComboBoxItem Content="按标题" />
+                        <ComboBoxItem Content="按艺术家" />
+                        <ComboBoxItem Content="按专辑" />
+                        <ComboBoxItem Content="按时长" />
+                    </ComboBox>
+                </Grid>
+                <ListView x:Name="TrackList" Grid.Row="1" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="Track_ItemClick">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid ColumnSpacing="12" Padding="2,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Width="40" Height="40" CornerRadius="4" Background="{ThemeResource ControlFillColorSecondaryBrush}">
+                                    <Image Source="{Binding CoverThumb}" Stretch="UniformToFill" />
+                                </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                                    <TextBlock Text="{Binding Title}" Style="{StaticResource BodyTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding AlbumArtistText}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="2" Text="{Binding Genre}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" VerticalAlignment="Center" Margin="0,0,16,0" TextTrimming="CharacterEllipsis" MaxWidth="140" />
+                                <TextBlock Grid.Column="3" Text="{Binding DurationText}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+
+            <!-- 专辑面板 -->
+            <GridView x:Name="AlbumGrid" Visibility="Collapsed" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="Album_ItemClick">
+                <GridView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Width="150" Margin="4" RowSpacing="6">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Border Grid.Row="0" Width="140" Height="140" CornerRadius="8" Background="{ThemeResource ControlFillColorSecondaryBrush}">
+                                <Grid>
+                                    <FontIcon Glyph="&#xE8D6;" FontSize="28" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    <Image Source="{Binding CoverThumb}" Stretch="UniformToFill" />
+                                </Grid>
+                            </Border>
+                            <TextBlock Grid.Row="1" Text="{Binding Name}" Style="{StaticResource BodyTextBlockStyle}" TextTrimming="CharacterEllipsis" MaxWidth="140" />
+                            <TextBlock Grid.Row="2" Text="{Binding Artist}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" MaxWidth="140" />
+                        </Grid>
+                    </DataTemplate>
+                </GridView.ItemTemplate>
+            </GridView>
+
+            <!-- 艺术家面板（主列表 + 详情） -->
+            <Grid x:Name="ArtistsPanel" Visibility="Collapsed" ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="320" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <ListView x:Name="ArtistList" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="Artist_ItemClick">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid ColumnSpacing="12" Padding="2,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Width="44" Height="44" CornerRadius="22" Background="{ThemeResource ControlFillColorSecondaryBrush}">
+                                    <Image Source="{Binding CoverThumb}" Stretch="UniformToFill" />
+                                </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                                    <TextBlock Text="{Binding Name}" Style="{StaticResource BodyTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding DetailText}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <Grid x:Name="ArtistDetail" Grid.Column="1" Visibility="Collapsed" RowSpacing="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Button Click="ArtistBack_Click" Style="{StaticResource AccentButtonStyle}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE72B;" FontSize="12" />
+                                <TextBlock Text="返回" />
+                            </StackPanel>
+                        </Button>
+                        <TextBlock x:Name="ArtistDetailTitle" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <ListView x:Name="ArtistTrackList" Grid.Row="1" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="ArtistTrack_ItemClick">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnSpacing="12" Padding="2,5">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Spacing="1">
+                                        <TextBlock Text="{Binding Title}" Style="{StaticResource BodyTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding Album}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" Text="{Binding DurationText}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </Grid>
+
+            <!-- 歌单面板（主列表 + 详情） -->
+            <Grid x:Name="PlaylistsPanel" Visibility="Collapsed" ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="320" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid RowSpacing="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="新建歌单" Style="{StaticResource AccentButtonStyle}" Click="Create_Click" />
+                        <Button Content="删除" Click="Delete_Click" />
+                    </StackPanel>
+                    <ListView x:Name="PlaylistList" Grid.Row="1" SelectionMode="Single" SelectionChanged="Playlist_SelectionChanged" MaxHeight="560">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnSpacing="10" Padding="2,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" Width="40" Height="40" CornerRadius="6" Background="{ThemeResource AccentFillColorDefaultBrush}">
+                                        <FontIcon Glyph="&#xE8FD;" FontSize="14" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                                        <TextBlock Text="{Binding Name}" Style="{StaticResource BodyTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding CountText}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+
+                <Grid x:Name="PlaylistDetail" Grid.Column="1" RowSpacing="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock x:Name="DetailTitle" Text="未选择播放列表" Style="{StaticResource TitleTextBlockStyle}" />
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8">
+                        <Button Content="播放" Style="{StaticResource AccentButtonStyle}" Click="PlayPlaylist_Click" />
+                        <Button Content="移除选中曲目" Click="RemoveTrack_Click" />
+                        <TextBlock x:Name="DetailSubtitle" Text="" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <ListView x:Name="DetailList" Grid.Row="2" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="Detail_ItemClick">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnSpacing="12" Padding="2,5">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" Width="36" Height="36" CornerRadius="4" Background="{ThemeResource ControlFillColorSecondaryBrush}">
+                                        <Image Source="{Binding CoverThumb}" Stretch="UniformToFill" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                                        <TextBlock Text="{Binding Title}" Style="{StaticResource BodyTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding Subtitle}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2" Text="{Binding DurationText}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </Grid>
+
+            <!-- 文件夹面板（主列表 + 详情） -->
+            <Grid x:Name="FoldersPanel" Visibility="Collapsed" ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="360" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <ListView x:Name="FolderNodeList" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="FolderNode_ItemClick">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid ColumnSpacing="12" Padding="2,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <FontIcon Grid.Column="0" Glyph="&#xE8B7;" FontSize="16" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="{Binding Name}" Style="{StaticResource BodyTextBlockStyle}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" Text="{Binding CountText}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <Grid x:Name="FolderDetail" Grid.Column="1" Visibility="Collapsed" RowSpacing="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Button Click="FolderBack_Click" Style="{StaticResource AccentButtonStyle}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE72B;" FontSize="12" />
+                                <TextBlock Text="返回" />
+                            </StackPanel>
+                        </Button>
+                        <TextBlock x:Name="FolderDetailTitle" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <ListView x:Name="FolderTrackList" Grid.Row="1" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="FolderTrack_ItemClick">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnSpacing="12" Padding="2,5">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Title}" Style="{StaticResource BodyTextBlockStyle}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="1" Text="{Binding DurationText}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </Grid>
+
+            <!-- 历史面板 -->
+            <Grid x:Name="HistoryPanel" Visibility="Collapsed" RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock x:Name="HistorySummary" Text="" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                    <Button Content="清空历史" Click="ClearHistory_Click" Margin="12,0,0,0" />
+                </StackPanel>
+                <ListView x:Name="HistoryList" Grid.Row="1" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="History_ItemClick">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid ColumnSpacing="12" Padding="2,5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Spacing="1">
+                                    <TextBlock Text="{Binding Title}" Style="{StaticResource BodyTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Artist}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="1" Text="{Binding PlayedAtText}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" Text="{Binding DurationText}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" VerticalAlignment="Center" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+        </Grid>
+    </Grid>
+</Page>
