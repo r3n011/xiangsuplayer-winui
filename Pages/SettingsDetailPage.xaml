@@ -19,6 +19,47 @@
 
             <TextBlock x:Name="DescText" Style="{StaticResource CardDesc}" />
 
+            <!-- ============ 账号（网易云登录 + 歌单同步）============ -->
+            <Border x:Name="SectionAccount" Style="{StaticResource DemoCard}" Visibility="Collapsed">
+                <StackPanel Spacing="12">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Border Width="44" Height="44" CornerRadius="22" Background="{ThemeResource ControlFillColorSecondaryBrush}">
+                            <Grid>
+                                <FontIcon Glyph="&#xE77B;" FontSize="18" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <Image x:Name="AccountAvatar" Stretch="UniformToFill" />
+                            </Grid>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center" Spacing="2">
+                            <TextBlock x:Name="AccountName" Text="未登录网易云" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                            <TextBlock x:Name="AccountStatus" Text="登录后可同步云歌单、提升在线播放音质" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                        <Button x:Name="BtnLogout" Content="退出登录" Click="AccountLogout_Click" VerticalAlignment="Center" Margin="12,0,0,0" Visibility="Collapsed" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBox x:Name="PhoneBox" Header="手机号" PlaceholderText="11 位手机号" Width="180" />
+                        <TextBox x:Name="CaptchaBox" Header="验证码" PlaceholderText="6 位验证码" Width="140" />
+                        <StackPanel Orientation="Vertical" Spacing="4" VerticalAlignment="Bottom">
+                            <Button x:Name="BtnSendCaptcha" Content="发送验证码" Click="SendCaptcha_Click" />
+                        </StackPanel>
+                        <Button x:Name="BtnLogin" Content="登录" Style="{StaticResource AccentButtonStyle}" Click="AccountLogin_Click" VerticalAlignment="Bottom" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Button x:Name="BtnSyncPlaylists" Content="同步网易云歌单" Click="SyncPlaylists_Click" />
+                        <TextBlock x:Name="SyncStatus" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Vertical" Spacing="6">
+                        <TextBlock Text="网页 Cookie 导入（备用）：在浏览器登录 music.163.com 后复制 Cookie 粘贴到下面" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBox x:Name="CookieBox" PlaceholderText="MUSIC_U=...; __csrf=..." Width="420" />
+                            <Button Content="导入" Click="CookieImport_Click" />
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
             <!-- ============ 播放 ============ -->
             <Border x:Name="SectionPlayback" Style="{StaticResource DemoCard}" Visibility="Collapsed">
                 <StackPanel Spacing="12">
@@ -164,6 +205,25 @@
                         <PasswordBox x:Name="NavidromePassword" Width="160" PasswordChanged="Sources_TextChanged" PlaceholderText="密码" />
                     </StackPanel>
                     <TextBlock Text="服务器需与电脑在同一网络；配置后可在搜索页音源下拉框中选择。" Style="{StaticResource CardDesc}" />
+
+                    <!-- 音源管理 / 音源市场入口（独立页面，1:1 对齐参考项目） -->
+                    <Border Style="{StaticResource DemoCard}" PointerPressed="LxSourcesEntry_PointerPressed" Margin="0,6,0,0">
+                        <Grid ColumnSpacing="14">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Width="44" Height="44" CornerRadius="12" Background="{ThemeResource ControlFillColorSecondaryBrush}">
+                                <FontIcon Glyph="&#xE8D6;" FontSize="18" Foreground="{ThemeResource AccentFillColorDefaultBrush}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="3">
+                                <TextBlock Text="音源管理与市场" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                                <TextBlock Text="音源脚本导入、像素音源市场下载" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                            <FontIcon Grid.Column="2" Glyph="&#xE76C;" FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
 
                     <TextBlock Text="下载" Style="{StaticResource CardTitle}" Margin="0,8,0,0" />
                     <StackPanel Orientation="Horizontal" Spacing="12">

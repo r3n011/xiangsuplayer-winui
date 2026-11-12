@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using PixelPlayer.WinUI.Models;
+using PixelPlayer.WinUI.Services.Lx;
 using PixelPlayer.WinUI.Services.Online;
 
 namespace PixelPlayer.WinUI.Services;
@@ -85,18 +86,23 @@ public static class LyricsFetchService
 
     private static async Task<LyricsResult?> FetchChainAsync(Track track, CancellationToken ct)
     {
-        // 1. 源自带歌词
+        // 1. LX 音源脚本歌词（平台音源全部由脚本提供，应用不内置平台 API）
         if (track.IsOnline)
         {
-            var src = OnlineSourceRegistry.Resolve(track.SourceId);
-            if (src is not null)
+            var lxKey = LxPlatformMap.KeyOf(track.SourceId);
+            if (lxKey is not null && LxJsEngine.Instance.IsReady)
             {
                 try
                 {
-                    var own = await src.GetLyricAsync(track, ct);
-                    if (own is { Lrc.Length: > 0 })
+                    var own = await LxJsEngine.Instance.GetLyricAsync(lxKey, LxPlatformMap.ToLxSong(track));
+                    if (own is not null && own.IsUsable())
                     {
-                        return new LyricsResult { Lrc = own.Value.Lrc, Translation = own.Value.Translation, Origin = src.Name };
+                        return new LyricsResult
+                        {
+                            Lrc = own.Lyric,
+                            Translation = own.Tlyric ?? "",
+                            Origin = LxPlatformMap.DisplayName(lxKey),
+                        };
                     }
                 }
                 catch { /* 继续下一链路 */ }

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="PixelPlayer.WinUI.Pages.LxSourcesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="Transparent">
+    <ScrollViewer HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Spacing="16" Padding="28,20,28,40" MaxWidth="1200" HorizontalAlignment="Left">
+
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <Button Click="Back_Click" Style="{StaticResource AccentButtonStyle}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE72B;" FontSize="12" />
+                        <TextBlock Text="返回" />
+                    </StackPanel>
+                </Button>
+                <TextBlock Text="自定义音源" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
+            </StackPanel>
+
+            <!-- ============ HeroSourceCard：音源脚本引擎状态 ============ -->
+            <Border Style="{StaticResource DemoCard}">
+                <Grid ColumnSpacing="14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Width="52" Height="52" CornerRadius="14">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#7C4DFF" Offset="0" />
+                                <GradientStop Color="#448AFF" Offset="1" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <FontIcon Glyph="&#xE8D6;" FontSize="22" Foreground="White" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="3">
+                        <TextBlock Text="音源脚本引擎" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                        <TextBlock x:Name="EngineStatusText" Text="正在加载音源脚本…" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
+                        <Button Content="导入脚本" Click="ImportScript_Click" />
+                        <Button x:Name="BtnReload" Content="重载音源" Click="Reload_Click" Style="{StaticResource AccentButtonStyle}" />
+                        <ProgressRing x:Name="EngineBusy" Width="22" Height="22" IsActive="True" Visibility="Visible" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- ============ MarketEntryCard：音源市场入口 ============ -->
+            <Border Style="{StaticResource DemoCard}" PointerPressed="MarketEntry_PointerPressed" PointerEntered="EntryCard_PointerEntered" PointerExited="EntryCard_PointerExited">
+                <Grid ColumnSpacing="14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Width="52" Height="52" CornerRadius="14" Background="{ThemeResource ControlFillColorSecondaryBrush}">
+                        <FontIcon Glyph="&#xE719;" FontSize="22" Foreground="{ThemeResource AccentFillColorDefaultBrush}" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="3">
+                        <TextBlock Text="音源市场" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                        <TextBlock x:Name="MarketEntryText" Text="从像素音源市场浏览并下载更多音源脚本" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                    <FontIcon Grid.Column="2" Glyph="&#xE76C;" FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+
+            <!-- ============ PlatformRoutingCard：平台路由概览 ============ -->
+            <Border Style="{StaticResource DemoCard}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="平台路由" Style="{StaticResource CardTitle}" />
+                    <TextBlock Text="在线播放时按 音源脚本 → 内置接口 → 跨源换源 的顺序解析播放地址；下面是各平台当前的脚本覆盖情况。"
+                               Style="{StaticResource CardDesc}" TextWrapping="Wrap" />
+                    <ListView x:Name="RoutingList" SelectionMode="None" IsItemClickEnabled="False">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnSpacing="12" Padding="2,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="72" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding Platform}" Style="{StaticResource BodyTextBlockStyle}" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="1" Text="{Binding ScriptName}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                    <Border Grid.Column="2" CornerRadius="10" Padding="10,2" VerticalAlignment="Center"
+                                            Background="{ThemeResource ControlFillColorSecondaryBrush}">
+                                        <TextBlock Text="{Binding State}" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+            </Border>
+
+            <!-- ============ ScriptSourceCard 列表 ============ -->
+            <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,6,0,0">
+                <TextBlock Text="已安装音源" Style="{StaticResource CardTitle}" VerticalAlignment="Center" />
+                <TextBlock x:Name="ScriptCountText" Text="" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+            </StackPanel>
+
+            <ListView x:Name="ScriptList" SelectionMode="None">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource DemoCard}" Margin="0,2">
+                            <StackPanel Spacing="8">
+                                <Grid ColumnSpacing="14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" Width="48" Height="48" CornerRadius="24" Background="{Binding AvatarBrush}">
+                                        <TextBlock Text="{Binding Letter}" FontSize="20" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                        <TextBlock Text="{Binding Name}" Style="{StaticResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding MetaText}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                    <Button Grid.Column="2" Content="删除" Click="DeleteScript_Click" Tag="{Binding FileName}" VerticalAlignment="Center" />
+                                </Grid>
+
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="提供平台" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                    <ItemsControl ItemsSource="{Binding PlatformChips}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Orientation="Horizontal" Spacing="6" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border CornerRadius="10" Padding="10,2" Background="{ThemeResource AccentFillColorDefaultBrush}">
+                                                    <TextBlock Text="{Binding}" FontSize="11" Foreground="White" />
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+
+                                <Expander Header="查看简介" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" IsExpanded="False" Visibility="{Binding HasDescription}">
+                                    <TextBlock Text="{Binding Description}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                                </Expander>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+            <TextBlock x:Name="EmptyScriptsHint" Text="还没有安装音源脚本。点击上方「导入脚本」或前往「音源市场」下载。"
+                       Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" Visibility="Collapsed" />
+
+            <!-- ============ UsageInfoCard：使用说明 ============ -->
+            <Border Style="{StaticResource DemoCard}">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="使用说明" Style="{StaticResource CardTitle}" />
+                    <TextBlock Style="{StaticResource CardDesc}" TextWrapping="Wrap"
+                               Text="· 音源脚本来自像素音源市场（GitHub 仓库 guoyue2010/lxmusic-），格式与 LX Music 自定义源兼容。" />
+                    <TextBlock Style="{StaticResource CardDesc}" TextWrapping="Wrap"
+                               Text="· 脚本存放在 %LocalAppData%\PixelPlayer.WinUI\lx_sources 目录，可手动放入 .js 文件后点「重载音源」。" />
+                    <TextBlock Style="{StaticResource CardDesc}" TextWrapping="Wrap"
+                               Text="· 在搜索页选择一个在线平台搜索歌曲，播放时会优先通过音源脚本解析播放地址。" />
+                    <TextBlock Style="{StaticResource CardDesc}" TextWrapping="Wrap"
+                               Text="· 同一平台可安装多个脚本，播放时按安装顺序依次尝试。" />
+                    <TextBlock Style="{StaticResource CardDesc}" TextWrapping="Wrap"
+                               Text="· 加载失败或长时间无响应的脚本会被自动跳过并降级到内置接口。" />
+                    <TextBlock Style="{StaticResource CardDesc}" TextWrapping="Wrap"
+                               Text="· 请在遵守版权法规的前提下使用，脚本接口由脚本作者提供。" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

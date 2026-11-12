@@ -120,7 +120,9 @@ public sealed class DownloadService
             string sourceUrl;
             if (track.IsOnline)
             {
-                sourceUrl = await OnlineSourceRegistry.ResolveStreamUrlAsync(track, task.Cts.Token) ?? "";
+                // 走统一解析核心（LX 音源脚本 → 跨源换源），不内置平台 API
+                var outcome = await SourceResolver.ResolveAsync(track, ct: task.Cts.Token);
+                sourceUrl = outcome.Success ? outcome.Url ?? "" : "";
                 if (sourceUrl.Length == 0) throw new InvalidOperationException("无法解析音源直链");
             }
             else

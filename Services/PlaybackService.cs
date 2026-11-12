@@ -263,7 +263,7 @@ public sealed class PlaybackService
         _ = LoadCurrentAsync(autoPlay: true);
     }
 
-    /// <summary>解析直链；在线曲目先查源。返回 null 表示不可用。</summary>
+    /// <summary>解析直链；在线曲目走统一解析链路（SourceResolver：源顺序 × 音质链 → 跨源换源）。返回 null 表示不可用。</summary>
     private async Task<string?> ResolveSourceAsync(Track track, int gen)
     {
         if (!track.IsOnline) return track.Path;
@@ -271,7 +271,16 @@ public sealed class PlaybackService
         string url;
         try
         {
-            url = await OnlineSourceRegistry.ResolveStreamUrlAsync(track) ?? "";
+            var outcome = await SourceResolver.ResolveAsync(track);
+            url = outcome.Success ? outcome.Url ?? "" : "";
+            App.LogCrash("Resolve", new Exception(
+                $"{track.Title} [{track.SourceId}/{track.OnlineKey}] -> success={outcome.Success} " +
+                $"kind={outcome.Kind} src={outcome.SourceId} switched={outcome.Switched} " +
+                $"url={(string.IsNullOrEmpty(url) ? "-" : url[..Math.Min(90, url.Length)])} msg={outcome.Message}"));
+            if (!outcome.Success && !string.IsNullOrEmpty(outcome.Message))
+            {
+                System.Diagnostics.Debug.WriteLine($"[SourceResolver] {track.Title}: {outcome.Kind} {outcome.Message}");
+            }
         }
         catch (Exception ex)
         {
@@ -357,6 +366,7 @@ public sealed class PlaybackService
     /// <summary>曲目不可用（无版权/文件缺失）时自动跳下一首；连跳上限防死循环。</summary>
     private void SkipUnavailable()
     {
+        App.LogCrash("SkipUnavailable", new Exception($"跳过 {Current?.Title}（不可用）failures={_consecutiveFailures + 1}"));
         if (Queue.Count <= 1 || ++_consecutiveFailures > Queue.Count)
         {
             Pause();

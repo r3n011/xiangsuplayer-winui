@@ -12,6 +12,12 @@ public sealed class Playlist
     public List<string> TrackPaths { get; set; } = new();
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.Now;
 
+    /// <summary>云端歌单（网易云等）的远程 Id，本地歌单为空。</summary>
+    public string? CloudId { get; set; }
+    /// <summary>云端歌单封面 URL。</summary>
+    public string? CoverUrl { get; set; }
+
+    [JsonIgnore] public bool IsCloud => !string.IsNullOrEmpty(CloudId);
     [JsonIgnore] public string CountText => $"{TrackPaths.Count} 首";
     [JsonIgnore] public BitmapImage? CoverThumb { get; set; }
 }

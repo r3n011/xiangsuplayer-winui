@@ -28,6 +28,10 @@ public abstract class OnlineSource
     /// <summary>解析播放直链；不可用返回 null（上层自动跳下一首）。</summary>
     public abstract Task<string?> GetStreamUrlAsync(Track track, CancellationToken ct = default);
 
+    /// <summary>按音质解析直链（默认退化为 GetStreamUrlAsync；kw/kg/qq 等按 br 区分）。</summary>
+    public virtual Task<string?> GetStreamUrlWithQualityAsync(Track track, string quality, CancellationToken ct = default)
+        => GetStreamUrlAsync(track, ct);
+
     /// <summary>歌词（可选）：返回 (lrc, 翻译lrc)。</summary>
     public virtual Task<(string Lrc, string Translation)?> GetLyricAsync(Track track, CancellationToken ct = default)
         => Task.FromResult<(string, string)?>(null);
@@ -56,13 +60,13 @@ public abstract class OnlineSource
 /// <summary>音源注册中心：按 Id 解析 + 直链缓存（对应 PlaybackUrlCache）。</summary>
 public static class OnlineSourceRegistry
 {
+    /// <summary>
+    /// 音源注册中心。平台音源（网易云/QQ/酷狗/酷我/咪咕）不内置任何 API —— 全部
+    /// 由像素音源市场下载的 LX 脚本提供（见 LxJsEngine / LxPlatformMap）。
+    /// 这里只保留用户自建的媒体服务器。
+    /// </summary>
     public static List<OnlineSource> Sources { get; } = new()
     {
-        new NeteaseSource(),
-        new QqSource(),
-        new KugouSource(),
-        new KuwoSource(),
-        new BilibiliSource(),
         new JellyfinSource(),
         new NavidromeSource(),
     };
@@ -80,8 +84,22 @@ public static class OnlineSourceRegistry
         }
     }
 
-    /// <summary>直链缓存（对应 PlaybackUrlCache，20 分钟过期）。</summary>
+    /// <summary>直链缓存（对应 PlaybackUrlCache，20 分钟过期；key 含音质）。</summary>
     private static readonly ConcurrentDictionary<string, (string Url, DateTime Expire)> _cache = new();
+
+    public static bool TryGetCached(string key, out string url)
+    {
+        if (_cache.TryGetValue(key, out var hit) && hit.Expire > DateTime.Now)
+        {
+            url = hit.Url;
+            return true;
+        }
+        url = "";
+        return false;
+    }
+
+    public static void PutCached(string key, string url) =>
+        _cache[key] = (url, DateTime.Now.AddMinutes(20));
 
     public static async Task<string?> ResolveStreamUrlAsync(Track track, CancellationToken ct = default)
     {

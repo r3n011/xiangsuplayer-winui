@@ -14,6 +14,12 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <ApplicationIcon>app.ico</ApplicationIcon>
+    <!--
+      WinUI 的 XamlPreCompile 用相对路径 /out:obj\...\intermediatexaml\*.dll 编译中间程序集，
+      而 Roslyn 共享编译服务器是长驻进程，工作目录不一定是项目目录 → 产物被写到别处，
+      随后 MarkupCompilePass2 报 WMC1006/WMC9999。关掉共享编译（进程内直接调用）即可稳定。
+    -->
+    <UseSharedCompilation>false</UseSharedCompilation>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,5 +30,7 @@
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.6.5" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2957" />
     <PackageReference Include="TagLibSharp" Version="2.3.0" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0" />
+    <PackageReference Include="Jint" Version="4.2.2" />
   </ItemGroup>
 </Project>

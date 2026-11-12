@@ -47,6 +47,11 @@ public sealed partial class MainWindow : Window
         ApplyTheme(SettingsService.Instance.Settings.Theme);
         Nav.SelectedItem = Nav.MenuItems[0];
 
+        // 自适应导航（对齐参照项目 isTabletShell = isLandscape || forceTabletLayout）：
+        // 宽 ≥1260px（840dp）→ 常开侧栏；≥900px（600dp）→ 紧凑图标栏；窄 → 汉堡折叠
+        Nav.SizeChanged += Nav_SizeChanged;
+        ApplyNavLayout(Nav.ActualWidth);
+
         var player = PlaybackService.Instance;
         player.TrackChanged += (_, _) => { UpdatePlayerBar(); SyncFloatingLyrics(); };
         player.StateChanged += (_, _) => UpdateTransportState();
@@ -106,6 +111,23 @@ public sealed partial class MainWindow : Window
         var remote = WebRemoteService.Instance;
         if (SettingsService.Instance.Settings.WebRemoteEnabled && !remote.IsRunning) remote.Start();
         if (!SettingsService.Instance.Settings.WebRemoteEnabled && remote.IsRunning) remote.Stop();
+    }
+
+    /// <summary>宽度驱动的导航形态切换（对应参照 isTabletShell：紧凑=底部栏 / 展开=Rail）。
+    /// 注意：SizeChanged 处于布局 pass 中，直接改 PaneDisplayMode 会造成 re-entrant 布局
+    /// 崩溃（0xc000027b stowed exception），必须推迟到 DispatcherQueue 执行。</summary>
+    private void Nav_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        var width = e.NewSize.Width;
+        DispatcherQueue.TryEnqueue(() => ApplyNavLayout(width));
+    }
+
+    private void ApplyNavLayout(double width)
+    {
+        // ≥1260px（≈840dp）→ 常开侧栏；≥900px（≈600dp）→ 紧凑图标栏；窄 → 汉堡折叠
+        Nav.PaneDisplayMode = width >= 1260 ? NavigationViewPaneDisplayMode.Left
+            : width >= 900 ? NavigationViewPaneDisplayMode.LeftCompact
+            : NavigationViewPaneDisplayMode.LeftMinimal;
     }
 
     /// <summary>供设置页等跨页跳转：按 Tag 选中导航项。</summary>

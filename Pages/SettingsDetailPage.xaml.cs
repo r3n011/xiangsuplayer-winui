@@ -6,10 +6,12 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using PixelPlayer.WinUI.Models;
 using PixelPlayer.WinUI.Services;
+using PixelPlayer.WinUI.Services.Netease;
 using Windows.Storage.Pickers;
 
 namespace PixelPlayer.WinUI.Pages;
@@ -37,19 +39,20 @@ public sealed partial class SettingsDetailPage : Page
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        foreach (var section in new[] { SectionPlayback, SectionAppearance, SectionLibrary, SectionEqualizer, SectionAi, SectionSources, SectionFloating, SectionWebRemote, SectionBackup, SectionAbout })
+        foreach (var section in new[] { SectionAccount, SectionPlayback, SectionAppearance, SectionLibrary, SectionEqualizer, SectionAi, SectionSources, SectionFloating, SectionWebRemote, SectionBackup, SectionAbout })
         {
             section.Visibility = Visibility.Collapsed;
         }
 
         var (title, desc) = _tag switch
         {
+            "account" => ("账号", "网易云登录与云歌单同步。"),
             "playback" => ("播放", "倍速、睡眠定时器与播放行为。"),
             "appearance" => ("外观", "主题与配色。"),
             "library" => ("音乐管理", "音乐文件夹、扫描与曲库维护。"),
             "equalizer" => ("均衡器", "EQ 与音效增强。"),
             "ai" => ("AI 集成（β）", "AI 服务商与接口配置。"),
-            "sources" => ("在线音源", "自建媒体服务器与下载目录。"),
+            "sources" => ("在线音源", "自建媒体服务器与下载目录；音源脚本与市场在「音源管理与市场」入口。"),
             "floating" => ("悬浮歌词", "桌面悬浮歌词窗口。"),
             "webremote" => ("网页遥控", "局域网遥控服务。"),
             "backup" => ("备份与恢复", "导出/导入配置、歌单与统计。"),
@@ -58,7 +61,8 @@ public sealed partial class SettingsDetailPage : Page
 
         TitleText.Text = title;
         DescText.Text = desc;
-        if (_tag == "playback") SectionPlayback.Visibility = Visibility.Visible;
+        if (_tag == "account") SectionAccount.Visibility = Visibility.Visible;
+        else if (_tag == "playback") SectionPlayback.Visibility = Visibility.Visible;
         else if (_tag == "appearance") SectionAppearance.Visibility = Visibility.Visible;
         else if (_tag == "library") SectionLibrary.Visibility = Visibility.Visible;
         else if (_tag == "equalizer") SectionEqualizer.Visibility = Visibility.Visible;
@@ -71,6 +75,7 @@ public sealed partial class SettingsDetailPage : Page
 
         switch (_tag)
         {
+            case "account": InitAccount(); break;
             case "playback": InitPlayback(); break;
             case "appearance": InitAppearance(); break;
             case "library": InitLibrary(); break;
@@ -89,6 +94,161 @@ public sealed partial class SettingsDetailPage : Page
     {
         if (Frame.CanGoBack) Frame.GoBack();
         else (App.MainWindow as MainWindow)?.NavigateToTag("settings");
+    }
+
+    /* ---------------- 账号（网易云） ---------------- */
+
+    private void InitAccount()
+    {
+        NeteaseAccountService.Instance.AccountChanged -= OnAccountChanged;
+        NeteaseAccountService.Instance.AccountChanged += OnAccountChanged;
+        RefreshAccountUi();
+    }
+
+    private void OnAccountChanged(object? sender, EventArgs e) =>
+        DispatcherQueue.TryEnqueue(RefreshAccountUi);
+
+    private void RefreshAccountUi()
+    {
+        var account = NeteaseAccountService.Instance;
+        if (account.IsLoggedIn && account.Profile is not null)
+        {
+            AccountName.Text = account.Profile.Nickname;
+            AccountStatus.Text = $"已登录 · UID {account.Profile.UserId}";
+            BtnLogout.Visibility = Visibility.Visible;
+            BtnLogin.Visibility = Visibility.Collapsed;
+            BtnSendCaptcha.IsEnabled = false;
+            PhoneBox.IsEnabled = false;
+            CaptchaBox.IsEnabled = false;
+            AccountAvatar.Visibility = Visibility.Visible;
+            _ = LoadAvatarAsync(account.Profile.AvatarUrl);
+        }
+        else
+        {
+            AccountName.Text = "未登录网易云";
+            AccountStatus.Text = "登录后可同步云歌单、提升在线播放音质";
+            BtnLogout.Visibility = Visibility.Collapsed;
+            BtnLogin.Visibility = Visibility.Visible;
+            BtnSendCaptcha.IsEnabled = true;
+            PhoneBox.IsEnabled = true;
+            CaptchaBox.IsEnabled = true;
+            AccountAvatar.Visibility = Visibility.Collapsed;
+            AccountAvatar.Source = null;
+        }
+    }
+
+    private async Task LoadAvatarAsync(string? url)
+    {
+        if (string.IsNullOrEmpty(url)) return;
+        try
+        {
+            var bytes = await new System.Net.Http.HttpClient().GetByteArrayAsync(url);
+            var img = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage();
+            using var ms = new MemoryStream(bytes);
+            await img.SetSourceAsync(ms.AsRandomAccessStream());
+            AccountAvatar.Source = img;
+        }
+        catch { }
+    }
+
+    private async void SendCaptcha_Click(object sender, RoutedEventArgs e)
+    {
+        var phone = PhoneBox.Text.Trim();
+        if (phone.Length == 0)
+        {
+            SyncStatus.Text = "请先输入手机号";
+            return;
+        }
+        try
+        {
+            BtnSendCaptcha.IsEnabled = false;
+            SyncStatus.Text = "验证码发送中…";
+            await NeteaseAccountService.Instance.SendCaptchaAsync(phone);
+            SyncStatus.Text = "验证码已发送，请查收短信";
+        }
+        catch (Exception ex)
+        {
+            SyncStatus.Text = $"发送失败：{ex.Message}";
+        }
+        finally
+        {
+            BtnSendCaptcha.IsEnabled = true;
+        }
+    }
+
+    private async void AccountLogin_Click(object sender, RoutedEventArgs e)
+    {
+        var phone = PhoneBox.Text.Trim();
+        var captcha = CaptchaBox.Text.Trim();
+        if (phone.Length == 0 || captcha.Length == 0)
+        {
+            SyncStatus.Text = "请输入手机号和验证码";
+            return;
+        }
+        try
+        {
+            BtnLogin.IsEnabled = false;
+            SyncStatus.Text = "登录中…";
+            var profile = await NeteaseAccountService.Instance.LoginByCaptchaAsync(phone, captcha);
+            SyncStatus.Text = $"登录成功：{profile.Nickname}";
+        }
+        catch (Exception ex)
+        {
+            SyncStatus.Text = $"登录失败：{ex.Message}";
+        }
+        finally
+        {
+            BtnLogin.IsEnabled = true;
+        }
+    }
+
+    private async void SyncPlaylists_Click(object sender, RoutedEventArgs e)
+    {
+        if (!NeteaseAccountService.Instance.IsLoggedIn)
+        {
+            SyncStatus.Text = "请先登录网易云账号";
+            return;
+        }
+        try
+        {
+            BtnSyncPlaylists.IsEnabled = false;
+            SyncStatus.Text = "同步中…";
+            var (plCount, songCount) = await NeteasePlaylistService.Instance.SyncAllAsync();
+            SyncStatus.Text = $"同步完成：{plCount} 个歌单 / {songCount} 首歌";
+        }
+        catch (Exception ex)
+        {
+            SyncStatus.Text = $"同步失败：{ex.Message}";
+        }
+        finally
+        {
+            BtnSyncPlaylists.IsEnabled = true;
+        }
+    }
+
+    private void AccountLogout_Click(object sender, RoutedEventArgs e)
+    {
+        NeteaseAccountService.Instance.Logout();
+        SyncStatus.Text = "已退出登录";
+    }
+
+    private void CookieImport_Click(object sender, RoutedEventArgs e)
+    {
+        var cookie = CookieBox.Text.Trim();
+        if (cookie.Length == 0)
+        {
+            SyncStatus.Text = "请粘贴 Cookie";
+            return;
+        }
+        try
+        {
+            NeteaseAccountService.Instance.ImportCookies(cookie);
+            SyncStatus.Text = "Cookie 已导入";
+        }
+        catch (Exception ex)
+        {
+            SyncStatus.Text = $"导入失败：{ex.Message}";
+        }
     }
 
     /* ---------------- 播放 ---------------- */
@@ -188,6 +348,9 @@ public sealed partial class SettingsDetailPage : Page
         DownloadFolderBox.Text = s.DownloadFolder;
         _loading = false;
     }
+
+    private void LxSourcesEntry_PointerPressed(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e) =>
+        Frame.Navigate(typeof(LxSourcesPage), null);
 
     private void Sources_TextChanged(object sender, RoutedEventArgs e)
     {

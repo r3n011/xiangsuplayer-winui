@@ -54,6 +54,31 @@ def find_window(pids):
     return best
 
 
+def find_window_by_title(title):
+    """按窗口标题（包含匹配）找可见窗口，作为进程名匹配不可用时的兜底。"""
+    best = None
+    best_area = 0
+
+    def enum_proc(hwnd, _):
+        nonlocal best, best_area
+        if user32.IsWindowVisible(hwnd):
+            length = user32.GetWindowTextLengthW(hwnd)
+            if length > 0:
+                buf = ct.create_unicode_buffer(length + 1)
+                user32.GetWindowTextW(hwnd, buf, length + 1)
+                if title in buf.value:
+                    rect = wintypes.RECT()
+                    user32.GetWindowRect(hwnd, ct.byref(rect))
+                    area = max(0, rect.right - rect.left) * max(0, rect.bottom - rect.top)
+                    if area > best_area:
+                        best, best_area = hwnd, area
+        return True
+
+    EnumProc = ct.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+    user32.EnumWindows(EnumProc(enum_proc), 0)
+    return best
+
+
 def capture(hwnd, out_path):
     rect = wintypes.RECT()
     user32.GetWindowRect(hwnd, ct.byref(rect))
@@ -98,19 +123,24 @@ def capture(hwnd, out_path):
     return ok, (w, h)
 
 
-pids = pids_of(PROC)
-hwnd = find_window(pids) if pids else None
-if not hwnd:
-    print("window not found", pids)
-    sys.exit(1)
+def main():
+    pids = pids_of(PROC)
+    hwnd = find_window(pids) if pids else None
+    if not hwnd:
+        print("window not found", pids)
+        sys.exit(1)
 
-if user32.IsIconic(hwnd):
-    user32.ShowWindow(hwnd, 9)  # SW_RESTORE
-    print("restored minimized window")
+    if user32.IsIconic(hwnd):
+        user32.ShowWindow(hwnd, 9)  # SW_RESTORE
+        print("restored minimized window")
 
-if WIDTH > 0 and HEIGHT > 0:
-    # SWP_NOACTIVATE | SWP_NOZORDER
-    user32.SetWindowPos(hwnd, 0, 80, 60, WIDTH, HEIGHT, 0x0010 | 0x0004)
+    if WIDTH > 0 and HEIGHT > 0:
+        # SWP_NOACTIVATE | SWP_NOZORDER
+        user32.SetWindowPos(hwnd, 0, 80, 60, WIDTH, HEIGHT, 0x0010 | 0x0004)
 
-ok, size = capture(hwnd, OUT)
-print(f"PrintWindow ok={ok} hwnd={hwnd} {size} -> {OUT}")
+    ok, size = capture(hwnd, OUT)
+    print(f"PrintWindow ok={ok} hwnd={hwnd} {size} -> {OUT}")
+
+
+if __name__ == "__main__":
+    main()

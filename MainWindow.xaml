@@ -22,7 +22,6 @@
             IsSettingsVisible="False"
             Background="Transparent"
             SelectionChanged="Nav_SelectionChanged">
-
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="主页" Tag="home" IsSelected="True">
                     <NavigationViewItem.Icon><FontIcon Glyph="&#xE80F;" /></NavigationViewItem.Icon>

@@ -15,6 +15,12 @@ public sealed partial class SettingsPage : Page
     private void Category_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement { Tag: string tag }) return;
+        // 在线音源 → 独立的自定义音源页（1:1 对齐参考项目），其余分类进详情页
+        if (tag == "sources")
+        {
+            Frame.Navigate(typeof(LxSourcesPage), null);
+            return;
+        }
         Frame.Navigate(typeof(SettingsDetailPage), tag);
     }
 }
